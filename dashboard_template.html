@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Interaktif Tujuan, Sasaran & Program K3LH 2026</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        html, body { margin: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #0b0f19; color: #f8fafc; }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-6 space-y-6">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-[#111827] border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="bg-teal-500/10 border border-teal-500/30 p-2.5 rounded-xl text-teal-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-base font-bold text-white tracking-wide">PT. TRISATRIA PERSADA BORNEO</h1>
+                    <span class="bg-teal-500/20 text-teal-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-teal-500/30">2026</span>
+                </div>
+                <p class="text-xs text-slate-400">Dashboard Interaktif Tujuan, Sasaran & Program K3LH Periode 2026</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-3">
+            <div class="bg-slate-900 border border-slate-800 px-3.5 py-2 rounded-xl text-xs flex items-center gap-2">
+                <span class="text-teal-400 font-semibold">📅 Tahun Evaluasi:</span>
+                <span class="text-white font-bold">2026</span>
+            </div>
+            <!-- Pengganti tombol "Unggah File Excel": data otomatis dari Google Drive -->
+            <div id="syncChip" class="bg-teal-600 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-lg flex items-center gap-2" title="">
+                🔗 Sinkron Google Drive · <span id="syncTime"></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Peringatan jika hitungan tidak sama dengan rumus di Excel -->
+    <div id="validationBox" class="hidden bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-2xl p-4 text-xs"></div>
+
+    <!-- KPI Summary Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1 -->
+        <div class="bg-[#111827] border border-slate-800 p-5 rounded-2xl shadow-xl relative overflow-hidden">
+            <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Program Kerja</p>
+            <div class="flex items-baseline gap-2 mt-1">
+                <h3 id="kpiTotalProg" class="text-3xl font-extrabold text-white">-</h3>
+                <span class="text-xs text-slate-400">Item Program</span>
+            </div>
+            <p class="text-xs text-teal-400 mt-2 font-medium flex items-center gap-1">👤 PIC: Leo & Nisa</p>
+        </div>
+        <!-- Card 2 -->
+        <div class="bg-[#111827] border border-slate-800 p-5 rounded-2xl shadow-xl relative overflow-hidden">
+            <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Rata-Rata Ketercapaian</p>
+            <div class="flex items-baseline gap-2 mt-1">
+                <h3 id="kpiAvgCap" class="text-3xl font-extrabold text-teal-400">-</h3>
+                <span class="text-xs text-slate-400">Akumulasi Tahunan</span>
+            </div>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
+                <div id="kpiProgressBar" class="bg-teal-500 h-full rounded-full" style="width: 0%"></div>
+            </div>
+        </div>
+        <!-- Card 3 -->
+        <div class="bg-[#111827] border border-slate-800 p-5 rounded-2xl shadow-xl relative overflow-hidden">
+            <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Program Terpenuhi (≥100%)</p>
+            <div class="flex items-baseline gap-2 mt-1">
+                <h3 id="kpiFulfilled" class="text-3xl font-extrabold text-emerald-400">-</h3>
+                <span id="kpiFulfilledOf" class="text-xs text-slate-400">dari - Program</span>
+            </div>
+            <p id="kpiSubStatus" class="text-[11px] text-slate-400 mt-2">-</p>
+        </div>
+        <!-- Card 4 -->
+        <div class="bg-[#111827] border border-slate-800 p-5 rounded-2xl shadow-xl relative overflow-hidden">
+            <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Anggaran K3LH</p>
+            <div class="mt-1">
+                <h3 id="kpiBudget" class="text-xl font-extrabold text-sky-400">-</h3>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-2">Pengadaan & Support RKAB</p>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Bar Chart (2 cols) -->
+        <div class="bg-[#111827] border border-slate-800 p-5 rounded-2xl shadow-xl lg:col-span-2 flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h3 class="text-sm font-bold text-white">Perbandingan Target (Plan) vs Realisasi (Actual)</h3>
+                    <p class="text-[11px] text-slate-400">Jumlah frekuensi kegiatan K3LH per bulan selama tahun 2026</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-blue-500 rounded-sm inline-block"></span> Target (Plan)</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 bg-emerald-500 rounded-sm inline-block"></span> Realisasi (Actual)</span>
+                </div>
+            </div>
+            <div class="relative flex-grow h-72"><canvas id="barChart"></canvas></div>
+        </div>
+
+        <!-- Donut Chart (1 col) -->
+        <div class="bg-[#111827] border border-slate-800 p-5 rounded-2xl shadow-xl flex flex-col justify-between">
+            <div>
+                <h3 class="text-sm font-bold text-white">Distribusi Status Program</h3>
+                <p id="donutSubtitle" class="text-[11px] text-slate-400">Persentase tingkat ketercapaian program K3LH</p>
+            </div>
+            <div class="relative h-56 my-auto"><canvas id="donutChart"></canvas></div>
+            <div class="grid grid-cols-3 gap-2 text-center pt-2 border-t border-slate-800 text-xs">
+                <div>
+                    <p id="donutTerpenuhi" class="font-extrabold text-emerald-400 text-sm">-</p>
+                    <span class="text-[10px] text-slate-400">Terpenuhi</span>
+                </div>
+                <div>
+                    <p id="donutSebagian" class="font-extrabold text-amber-400 text-sm">-</p>
+                    <span class="text-[10px] text-slate-400">Sebagian</span>
+                </div>
+                <div>
+                    <p id="donutBelum" class="font-extrabold text-rose-400 text-sm">-</p>
+                    <span class="text-[10px] text-slate-400">Belum</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Line Chart Trend -->
+    <div class="bg-[#111827] border border-slate-800 p-5 rounded-2xl shadow-xl">
+        <div class="mb-4">
+            <h3 class="text-sm font-bold text-white">Tren Persentase Ketercapaian Bulanan (%)</h3>
+            <p class="text-[11px] text-slate-400">Formulasi: Total Realisasi (Actual) / Total Rencana (Plan) × 100%</p>
+        </div>
+        <div class="relative h-64"><canvas id="lineChart"></canvas></div>
+    </div>
+
+    <!-- 1. TABEL SUMMARY (Rincian Program & Status Ketercapaian) -->
+    <div class="bg-[#111827] border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+        <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+                <h3 class="font-bold text-white text-sm">Rincian Program & Status Ketercapaian (Summary)</h3>
+                <p class="text-[11px] text-slate-400">Ringkasan total plan, total actual, % ketercapaian tahunan, biaya, dan PIC</p>
+            </div>
+            <input type="text" id="searchSummaryInput" placeholder="Cari program atau PIC..."
+                class="bg-slate-900 border border-slate-700 px-3.5 py-2 rounded-xl text-xs w-full sm:w-64 focus:outline-none focus:border-teal-500 text-white"
+                oninput="applyFilters()">
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+                <thead class="bg-slate-900 text-slate-400 uppercase border-b border-slate-800 text-[10px]">
+                    <tr>
+                        <th class="p-3.5 text-center w-12">NO</th>
+                        <th class="p-3.5">PROGRAM KERJA K3LH</th>
+                        <th class="p-3.5 text-center font-bold">TOTAL PLAN</th>
+                        <th class="p-3.5 text-center font-bold">TOTAL ACTUAL</th>
+                        <th class="p-3.5 text-center font-bold">KETERCAPAIAN</th>
+                        <th class="p-3.5 text-right font-bold">RINCIAN BIAYA</th>
+                        <th class="p-3.5 text-center font-bold">PIC</th>
+                    </tr>
+                </thead>
+                <tbody id="summaryTableBody" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 2. TABEL MATRIKS (Matrikulasi Detail Bulanan Q1-Q4) -->
+    <div class="bg-[#111827] border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+        <div class="p-5 border-b border-slate-800 flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div>
+                <h3 class="font-bold text-white text-sm">Matrikulasi Program Kerja K3LH 2026 (Detail Matriks)</h3>
+                <p class="text-[11px] text-slate-400">Rincian jadwal pelaksanaan bulanan (Q1-Q4), ketercapaian, anggaran, dan PIC</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <input type="text" id="searchInput" placeholder="Cari nama program atau PIC..."
+                    class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-xl text-xs w-full sm:w-64 focus:outline-none focus:border-teal-500 text-white"
+                    oninput="applyFilters()">
+
+                <select id="statusFilter" onchange="applyFilters()" class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-xl text-xs text-white focus:outline-none focus:border-teal-500">
+                    <option value="ALL" id="optAll">Semua Status</option>
+                    <option value="TERPENUHI">Terpenuhi (≥100%)</option>
+                    <option value="SEBAGIAN">Sebagian (1-99%)</option>
+                    <option value="BELUM">Belum Terpenuhi (0%)</option>
+                </select>
+
+                <button onclick="resetFilters()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-3.5 py-2 rounded-xl transition border border-slate-700">
+                    🔄 Reset
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+                <thead class="bg-slate-900 text-slate-400 uppercase border-b border-slate-800 text-[10px]">
+                    <tr id="matrixHeadRow">
+                        <th class="p-3 text-center w-12">NO</th>
+                        <th class="p-3 min-w-[240px]">PROGRAM KERJA K3LH</th>
+                    </tr>
+                    <tr id="matrixSubHeadRow" class="text-[9px] text-slate-500 bg-slate-950/50">
+                        <th colspan="2"></th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
+                <!-- Summary Footer Rows -->
+                <tfoot id="tableFooter" class="bg-slate-950 font-bold text-white border-t border-slate-800"></tfoot>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Data diisi oleh app.py dari file Excel di Google Drive
+        const DATA = __DASHBOARD_DATA__;
+
+        const monthsNames = ['JAN','FEB','MAR','APR','MEI','JUN','JUL','AGU','SEP','OKT','NOV','DES'];
+        const quarterStyle = [
+            'bg-blue-950/30 text-blue-400', 'bg-teal-950/30 text-teal-400',
+            'bg-amber-950/30 text-amber-400', 'bg-indigo-950/30 text-indigo-400'
+        ];
+
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const num = v => Number.isInteger(v) ? v.toLocaleString('id-ID') : Number(v).toLocaleString('id-ID', { maximumFractionDigits: 2 });
+        const rupiah = v => 'Rp ' + Math.round(v).toLocaleString('id-ID');
+        const badge = status => status === 'TERPENUHI'
+            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+            : (status === 'SEBAGIAN' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                     : 'bg-rose-500/20 text-rose-400 border border-rose-500/30');
+
+        // ---------- Header & KPI ----------
+        document.getElementById('syncTime').textContent = DATA.syncedAt;
+        const total = DATA.programs.length;
+        document.getElementById('kpiTotalProg').textContent = total;
+        document.getElementById('kpiAvgCap').textContent = DATA.overallPct + '%';
+        document.getElementById('kpiProgressBar').style.width = Math.min(DATA.overallPct, 100) + '%';
+        document.getElementById('kpiFulfilled').textContent = DATA.counts.TERPENUHI;
+        document.getElementById('kpiFulfilledOf').textContent = `dari ${total} Program`;
+        document.getElementById('kpiSubStatus').textContent = `${DATA.counts.SEBAGIAN} Sebagian • ${DATA.counts.BELUM} Belum`;
+        document.getElementById('kpiBudget').textContent = rupiah(DATA.budget);
+        document.getElementById('donutSubtitle').textContent = `Persentase tingkat ketercapaian ${total} program K3LH`;
+        document.getElementById('donutTerpenuhi').textContent = DATA.counts.TERPENUHI;
+        document.getElementById('donutSebagian').textContent = DATA.counts.SEBAGIAN;
+        document.getElementById('donutBelum').textContent = DATA.counts.BELUM;
+        document.getElementById('optAll').textContent = `Semua Status (${total})`;
+
+        if (!DATA.validation.ok) {
+            const box = document.getElementById('validationBox');
+            box.classList.remove('hidden');
+            box.innerHTML = '<b>⚠ Perhitungan dashboard berbeda dengan rumus di file Excel:</b><br>' +
+                DATA.validation.issues.map(esc).join('<br>');
+        } else {
+            document.getElementById('syncChip').title =
+                `Tervalidasi: ${DATA.validation.n} program cocok dengan kolom KETERCAPAIAN & baris TOTAL di Excel`;
+        }
+
+        // ---------- Charts ----------
+        const grid = { color: '#1e293b' }, ticks = { color: '#94a3b8' };
+        new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: monthsNames,
+                datasets: [
+                    { label: 'Target (Plan)', data: DATA.mPlan, backgroundColor: '#3b82f6', borderRadius: 4 },
+                    { label: 'Realisasi (Actual)', data: DATA.mAct, backgroundColor: '#10b981', borderRadius: 4 }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                       scales: { x: { grid, ticks }, y: { grid, ticks, beginAtZero: true } } }
+        });
+
+        new Chart(document.getElementById('donutChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Terpenuhi', 'Sebagian', 'Belum'],
+                datasets: [{
+                    data: [DATA.counts.TERPENUHI, DATA.counts.SEBAGIAN, DATA.counts.BELUM],
+                    backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false },
+                       tooltip: { callbacks: { label: c => ` ${c.label}: ${c.raw} program (${Math.round(c.raw / total * 100)}%)` } } } }
+        });
+
+        new Chart(document.getElementById('lineChart'), {
+            type: 'line',
+            data: {
+                labels: monthsNames,
+                datasets: [{
+                    label: '% Ketercapaian Bulanan',
+                    data: DATA.mTrend,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#10b981',
+                    pointRadius: 4
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false },
+                       tooltip: { callbacks: { label: c => ` ${c.raw}% (Act ${DATA.mAct[c.dataIndex]} / Plan ${DATA.mPlan[c.dataIndex]})` } } },
+                       scales: { x: { grid, ticks }, y: { grid, ticks: { color: '#94a3b8', callback: v => v + '%' }, beginAtZero: true } } }
+        });
+
+        // ---------- Header matriks ----------
+        const headRow = document.getElementById('matrixHeadRow');
+        const subRow = document.getElementById('matrixSubHeadRow');
+        let hh = '', sh = '';
+        monthsNames.forEach((m, i) => {
+            hh += `<th class="p-3 text-center border-l border-slate-800 ${quarterStyle[Math.floor(i / 3)]}" colspan="2">${m}</th>`;
+            sh += '<th class="text-center border-l border-slate-800/60 p-1">Plan</th><th class="text-center p-1">Act</th>';
+        });
+        hh += `<th class="p-3 text-center border-l border-slate-800 bg-slate-900">TOT PLAN</th>
+               <th class="p-3 text-center bg-slate-900">TOT ACT</th>
+               <th class="p-3 text-center border-l border-slate-800">KETERCAPAIAN</th>
+               <th class="p-3 text-right">RINCIAN BIAYA</th>
+               <th class="p-3 text-center">PIC</th>`;
+        sh += '<th colspan="5"></th>';
+        headRow.insertAdjacentHTML('beforeend', hh);
+        subRow.insertAdjacentHTML('beforeend', sh);
+
+        // ---------- Tabel ----------
+        function renderSummary(list) {
+            const body = document.getElementById('summaryTableBody');
+            if (!list.length) {
+                body.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Tidak ada program yang sesuai.</td></tr>`;
+                return;
+            }
+            body.innerHTML = list.map(item => `
+                <tr class="hover:bg-slate-900/60 transition">
+                    <td class="p-3 text-center font-bold text-slate-400">${item.no}</td>
+                    <td class="p-3 font-semibold text-white">${esc(item.prog)}</td>
+                    <td class="p-3 text-center font-bold text-white">${num(item.totPlan)}</td>
+                    <td class="p-3 text-center font-bold text-emerald-400">${num(item.totAct)}</td>
+                    <td class="p-3 text-center"><span class="${badge(item.status)} px-2.5 py-1 rounded-full font-bold text-[11px]">${item.pct}%</span></td>
+                    <td class="p-3 text-right font-medium text-slate-300">${item.biaya > 0 ? rupiah(item.biaya) : 'Rp 0'}</td>
+                    <td class="p-3 text-center text-slate-400">${esc(item.pic || '-')}</td>
+                </tr>`).join('');
+        }
+
+        function renderMatrix(list) {
+            const body = document.getElementById('tableBody');
+            if (!list.length) {
+                body.innerHTML = `<tr><td colspan="31" class="p-8 text-center text-slate-400">Tidak ada program yang sesuai dengan filter pencarian.</td></tr>`;
+            } else {
+                body.innerHTML = list.map(item => {
+                    let cells = '';
+                    for (let m = 0; m < 12; m++) {
+                        const p = item.plans[m], a = item.acts[m];
+                        cells += `<td class="p-2 text-center border-l border-slate-800 text-slate-400">${p > 0 ? num(p) : '-'}</td>` +
+                                 `<td class="p-2 text-center text-emerald-400 font-medium">${num(a)}</td>`;
+                    }
+                    return `
+                    <tr class="hover:bg-slate-900/60 transition">
+                        <td class="p-3 text-center font-bold text-slate-400">${item.no}</td>
+                        <td class="p-3 font-semibold text-white">${esc(item.prog)}</td>
+                        ${cells}
+                        <td class="p-3 text-center border-l border-slate-800 font-bold text-white">${num(item.totPlan)}</td>
+                        <td class="p-3 text-center font-bold text-emerald-400">${num(item.totAct)}</td>
+                        <td class="p-3 text-center border-l border-slate-800"><span class="${badge(item.status)} px-2.5 py-1 rounded-full font-bold text-[11px]">${item.pct}%</span></td>
+                        <td class="p-3 text-right font-medium text-slate-300">${item.biaya > 0 ? rupiah(item.biaya) : '-'}</td>
+                        <td class="p-3 text-center text-slate-400">${esc(item.pic || '-')}</td>
+                    </tr>`;
+                }).join('');
+            }
+
+            // Footer selalu dari seluruh data (sama dengan baris TOTAL di Excel)
+            let f = `<tr><td colspan="2" class="p-3 text-right uppercase">Total Plan / Actual</td>`;
+            for (let m = 0; m < 12; m++) {
+                f += `<td class="p-3 text-center border-l border-slate-800 text-blue-400">${num(DATA.mPlan[m])}</td>` +
+                     `<td class="p-3 text-center text-emerald-400">${num(DATA.mAct[m])}</td>`;
+            }
+            f += `<td class="p-3 text-center border-l border-slate-800 text-white">${num(DATA.totalPlan)}</td>
+                  <td class="p-3 text-center text-emerald-400">${num(DATA.totalAct)}</td>
+                  <td class="p-3 text-center border-l border-slate-800 text-teal-400">${DATA.overallPct}%</td>
+                  <td class="p-3 text-right text-sky-400">${rupiah(DATA.budget)}</td><td></td></tr>`;
+            f += `<tr><td colspan="2" class="p-3 text-right uppercase text-teal-400">% Ketercapaian Bulanan</td>`;
+            DATA.mTrend.forEach(v => { f += `<td colspan="2" class="p-3 text-center border-l border-slate-800 text-teal-400">${v}%</td>`; });
+            f += `<td colspan="5" class="text-right p-3 text-slate-400 font-normal text-[10px]">Total Biaya: ${rupiah(DATA.budget)}</td></tr>`;
+            document.getElementById('tableFooter').innerHTML = f;
+        }
+
+        const matchKeyword = (item, kw) => !kw || item.prog.toLowerCase().includes(kw) || (item.pic || '').toLowerCase().includes(kw);
+
+        function applyFilters() {
+            const kwSummary = document.getElementById('searchSummaryInput').value.trim().toLowerCase();
+            const kwMatrix = document.getElementById('searchInput').value.trim().toLowerCase();
+            const statusVal = document.getElementById('statusFilter').value;
+            renderSummary(DATA.programs.filter(i => matchKeyword(i, kwSummary)));
+            renderMatrix(DATA.programs.filter(i => matchKeyword(i, kwMatrix) && (statusVal === 'ALL' || i.status === statusVal)));
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchSummaryInput').value = '';
+            document.getElementById('statusFilter').value = 'ALL';
+            applyFilters();
+        }
+
+        applyFilters();
+    </script>
+</body>
+</html>
