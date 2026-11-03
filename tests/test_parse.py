@@ -85,7 +85,9 @@ def main():
     assert d["overallPct"] == 46
     assert d["mTrend"] == [20, 54, 161, 147, 57, 44, 65, 67, 41, 13, 0, 0], d["mTrend"]
     assert d["programs"][16]["prog"] == "Evaluasi Dokumen & Prosedur"
-    assert d["programs"][9]["pic"] == ""
+    assert d["pics"] == ["Leo Darmawan"]
+    assert all(p["pic"] == "Leo Darmawan" for p in d["programs"])  # termasuk baris PIC kosong di Excel
+    assert d["totalPlan"] == 190 and d["totalAct"] == 110
     print("OK — 26 program,", d["counts"], "anggaran", f"{d['budget']:,.0f}",
           "| rata-rata", f"{d['overallPct']}%", "| tren", d["mTrend"])
 
