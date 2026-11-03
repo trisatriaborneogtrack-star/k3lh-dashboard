@@ -55,7 +55,7 @@
                 <h3 id="kpiTotalProg" class="text-3xl font-extrabold text-white">-</h3>
                 <span class="text-xs text-slate-400">Item Program</span>
             </div>
-            <p class="text-xs text-teal-400 mt-2 font-medium flex items-center gap-1">👤 PIC: Leo & Nisa</p>
+            <p class="text-xs text-teal-400 mt-2 font-medium flex items-center gap-1">PIC : Leo Darmawan</p>
         </div>
         <!-- Card 2 -->
         <div class="bg-[#111827] border border-slate-800 p-5 rounded-2xl shadow-xl relative overflow-hidden">
@@ -162,6 +162,7 @@
                     </tr>
                 </thead>
                 <tbody id="summaryTableBody" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
+                <tfoot id="summaryTableFooter" class="bg-slate-950 font-bold text-white border-t border-slate-800"></tfoot>
             </table>
         </div>
     </div>
@@ -323,8 +324,10 @@
         // ---------- Tabel ----------
         function renderSummary(list) {
             const body = document.getElementById('summaryTableBody');
+            const foot = document.getElementById('summaryTableFooter');
             if (!list.length) {
                 body.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Tidak ada program yang sesuai.</td></tr>`;
+                foot.innerHTML = '';
                 return;
             }
             body.innerHTML = list.map(item => `
@@ -337,6 +340,20 @@
                     <td class="p-3 text-right font-medium text-slate-300">${item.biaya > 0 ? rupiah(item.biaya) : 'Rp 0'}</td>
                     <td class="p-3 text-center text-slate-400">${esc(item.pic || '-')}</td>
                 </tr>`).join('');
+
+            // Footer mengikuti baris yang tampil; tanpa pencarian sama dengan baris TOTAL di Excel.
+            // Persen = rata-rata ketercapaian per program, bukan total actual / total plan.
+            const sum = key => list.reduce((acc, item) => acc + item[key], 0);
+            const avgPct = Math.round(sum('ratio') / list.length * 100);
+            foot.innerHTML = `
+                <tr>
+                    <td colspan="2" class="p-3 text-right uppercase">Total (${list.length} Program)</td>
+                    <td class="p-3 text-center">${num(sum('totPlan'))}</td>
+                    <td class="p-3 text-center text-emerald-400">${num(sum('totAct'))}</td>
+                    <td class="p-3 text-center text-teal-400">${avgPct}% <span class="text-[10px] font-normal text-slate-400">rata-rata</span></td>
+                    <td class="p-3 text-right text-sky-400">${rupiah(sum('biaya'))}</td>
+                    <td></td>
+                </tr>`;
         }
 
         function renderMatrix(list) {
