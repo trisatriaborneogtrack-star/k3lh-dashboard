@@ -49,13 +49,14 @@ st.set_page_config(
 )
 
 # Hilangkan chrome Streamlit supaya halaman sama persis dengan versi HTML.
+# Latar default terang; tombol tema di dashboard mengubahnya saat pengguna pilih Gelap.
 st.markdown(
     """
     <style>
       #MainMenu, header[data-testid="stHeader"], footer,
       [data-testid="stToolbar"], [data-testid="stDecoration"],
       [data-testid="stStatusWidget"] { display: none !important; }
-      .stApp, [data-testid="stAppViewContainer"], .main { background: #0b0f19 !important; }
+      .stApp, [data-testid="stAppViewContainer"], .main { background: #f1f5f9 !important; }
       .block-container, [data-testid="stMainBlockContainer"] {
           padding: 0 !important; max-width: 100% !important;
       }
@@ -283,8 +284,8 @@ try:
 
 except Exception as exc:  # tampilkan error yang jelas, bukan halaman kosong
     st.markdown(
-        f"""<div style="margin:24px;padding:20px;border-radius:16px;background:#111827;
-        border:1px solid #7f1d1d;color:#fecaca;font-family:Inter,sans-serif">
+        f"""<div style="margin:24px;padding:20px;border-radius:16px;background:#fef2f2;
+        border:1px solid #fecaca;color:#991b1b;font-family:Inter,sans-serif">
         <b>Gagal memuat data dashboard.</b><br><span style="font-size:13px">{html.escape(str(exc))}</span></div>""",
         unsafe_allow_html=True,
     )

@@ -11,8 +11,13 @@ data ditarik otomatis dari file **Program_Tujuan_Sasaran_K3LH_2026_Modern.xlsx**
 | `app.py` | Ambil file dari Drive, hitung semua angka, validasi silang ke rumus Excel, render halaman |
 | `dashboard_template.html` | Tampilan (Tailwind + Chart.js), sama dengan dashboard HTML |
 | `requirements.txt` | Library Python |
-| `.streamlit/config.toml` | Tema gelap |
+| `.streamlit/config.toml` | Tema Streamlit (default terang) |
 | `tests/test_parse.py` | Uji perhitungan terhadap isi Excel asli |
+
+## Tema terang / gelap
+
+Dashboard dibuka dengan tema **terang**. Tombol **☀️ Terang / 🌙 Gelap** di kanan atas header mengganti tema,
+termasuk warna grafik. Pilihan disimpan di browser masing-masing pengguna, jadi saat dibuka lagi tema terakhir dipakai.
 
 ## Syarat file di Google Drive
 
