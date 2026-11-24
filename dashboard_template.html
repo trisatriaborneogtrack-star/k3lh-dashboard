@@ -448,19 +448,30 @@
                 }).join('');
             }
 
-            // Footer selalu dari seluruh data (sama dengan baris TOTAL di Excel)
-            let f = `<tr><td colspan="2" class="p-3 text-right uppercase">Total Plan / Actual</td>`;
+            // Footer mengikuti baris yang tampil (filter pencarian & status).
+            // Tanpa filter hasilnya sama dengan baris TOTAL di Excel (rumus sama dengan app.py).
+            if (!list.length) { document.getElementById('tableFooter').innerHTML = ''; return; }
+            const mPlan = Array.from({ length: 12 }, (_, m) => list.reduce((s, i) => s + i.plans[m], 0));
+            const mAct = Array.from({ length: 12 }, (_, m) => list.reduce((s, i) => s + i.acts[m], 0));
+            const mTrend = mPlan.map((p, m) => p > 0 ? Math.round(mAct[m] / p * 100) : 0);
+            const totPlan = mPlan.reduce((a, b) => a + b, 0);
+            const totAct = mAct.reduce((a, b) => a + b, 0);
+            const avgPct = Math.round(list.reduce((s, i) => s + i.ratio, 0) / list.length * 100);
+            const budget = list.reduce((s, i) => s + i.biaya, 0);
+            const isFiltered = list.length !== DATA.programs.length;
+
+            let f = `<tr><td colspan="2" class="p-3 text-right uppercase">Total Plan / Actual${isFiltered ? ` <span class="normal-case text-[10px] font-normal text-slate-500 dark:text-slate-400">(${list.length} program)</span>` : ''}</td>`;
             for (let m = 0; m < 12; m++) {
-                f += `<td class="p-3 text-center border-l border-slate-200 dark:border-slate-800 text-blue-600 dark:text-blue-400">${num(DATA.mPlan[m])}</td>` +
-                     `<td class="p-3 text-center text-emerald-600 dark:text-emerald-400">${num(DATA.mAct[m])}</td>`;
+                f += `<td class="p-3 text-center border-l border-slate-200 dark:border-slate-800 text-blue-600 dark:text-blue-400">${num(mPlan[m])}</td>` +
+                     `<td class="p-3 text-center text-emerald-600 dark:text-emerald-400">${num(mAct[m])}</td>`;
             }
-            f += `<td class="p-3 text-center border-l border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">${num(DATA.totalPlan)}</td>
-                  <td class="p-3 text-center text-emerald-600 dark:text-emerald-400">${num(DATA.totalAct)}</td>
-                  <td class="p-3 text-center border-l border-slate-200 dark:border-slate-800 text-teal-600 dark:text-teal-400">${DATA.overallPct}%</td>
-                  <td class="p-3 text-right text-sky-600 dark:text-sky-400">${rupiah(DATA.budget)}</td><td></td></tr>`;
+            f += `<td class="p-3 text-center border-l border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">${num(totPlan)}</td>
+                  <td class="p-3 text-center text-emerald-600 dark:text-emerald-400">${num(totAct)}</td>
+                  <td class="p-3 text-center border-l border-slate-200 dark:border-slate-800 text-teal-600 dark:text-teal-400">${avgPct}%</td>
+                  <td class="p-3 text-right text-sky-600 dark:text-sky-400">${rupiah(budget)}</td><td></td></tr>`;
             f += `<tr><td colspan="2" class="p-3 text-right uppercase text-teal-600 dark:text-teal-400">% Ketercapaian Bulanan</td>`;
-            DATA.mTrend.forEach(v => { f += `<td colspan="2" class="p-3 text-center border-l border-slate-200 dark:border-slate-800 text-teal-600 dark:text-teal-400">${v}%</td>`; });
-            f += `<td colspan="5" class="text-right p-3 text-slate-500 dark:text-slate-400 font-normal text-[10px]">Total Biaya: ${rupiah(DATA.budget)}</td></tr>`;
+            mTrend.forEach(v => { f += `<td colspan="2" class="p-3 text-center border-l border-slate-200 dark:border-slate-800 text-teal-600 dark:text-teal-400">${v}%</td>`; });
+            f += `<td colspan="5" class="text-right p-3 text-slate-500 dark:text-slate-400 font-normal text-[10px]">Total Biaya: ${rupiah(budget)}</td></tr>`;
             document.getElementById('tableFooter').innerHTML = f;
         }
 
